@@ -380,6 +380,32 @@ describe('$schema', function () {
 
   });
 
+  it('Object.cardinalityAgnostic', function () {
+    validate({
+      o: {}
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(0);
+
+    validate({
+      o: [{}]
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(0);
+
+    validate({
+      o: [4]
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(1);
+
+    validate({
+      o: 4
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(1);
+  });
+
   it('Object', function () {
 
     validate({

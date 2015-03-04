@@ -2,6 +2,7 @@
  * Created by Andrius Skerla on 12/11/14.
  * mailto: andrius@skerla.com
  */
+var _ = require('lodash');
 var chai = require('chai');
 var should = require('should');
 var Validator = require('./../');
@@ -20,7 +21,6 @@ function validate(object, pipeline) {
 describe('$schema', function () {
 
   it('should run $schema by default if no pipeline method if defined', function () {
-
     Validator([
       {$schema: {
         name: String.required()
@@ -90,9 +90,62 @@ describe('$schema', function () {
 
   });
 
+  it('String.cardinalityAgnostic', function () {
+    testObjs = [{id: 5, name: ['hello world']}, {id: 5, name: 'hello world'}]
+
+    _.forEach(testObjs, function (o) {
+      validate(o, [
+        {$schema: {
+          name: String.cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.min(20).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.max(1).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.regexp(/hello/).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.regexp(/hello^/).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.len(11).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.len(1).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+    });
+  });
+
   it('String', function () {
     var o = {id: 5, name: 'hello world'};
-
     validate(o, [
       {$schema: {
         name: String

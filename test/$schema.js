@@ -34,6 +34,58 @@ describe('$schema', function () {
     }]).should.be.length(0);
   });
 
+  it ('Number.cardinalityAgnostic', function () {
+    var testObjs = [{id: [4], name: 'hey'}, {id: 4, name: 'hey'}];
+    _.forEach(testObjs, function(o) {
+      validate(o, [
+          {$schema: {
+            id: Number.cardinalityAgnostic()
+          }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          id: Number.required().min(4).max(4).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          id: Number.required().min(5).cardinalityAgnostic(),
+          name: Number
+        }}
+      ]).should.be.length(2);
+
+      validate({id: 'asd'}, [
+        {$schema: {
+          id: Number.cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate({}, [
+        {$schema: {
+          id: Number.required().cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate({
+        type: 'Big'
+      }, [
+        {$schema: {
+          type: String.oneOf(['Big', 'Small', 'Medium'])
+        }}
+      ]).should.be.length(0);
+
+      validate({
+        type: 'Tiny'
+      }, [
+        {$schema: {
+          type: String.oneOf(['Big', 'Small', 'Medium'])
+        }}
+      ]).should.be.length(1);
+    });
+  });
+
   it('Number', function () {
     var o = {
       id: 4,

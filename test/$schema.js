@@ -377,7 +377,6 @@ describe('$schema', function () {
         })
       }}
     ]).should.be.length(1);
-
   });
 
   it('Object.cardinalityAgnostic', function () {
@@ -404,6 +403,29 @@ describe('$schema', function () {
     }, {
       o: Object.cardinalityAgnostic()
     }).should.be.length(1);
+
+    var errors = validate({
+      o: [{
+        a: [],
+        b: ['Skerla']
+      }]
+    }, {
+      o: Object.cardinalityAgnostic().required().fn(function (object, keyPath) {
+        should(keyPath).match(/^o$/);
+
+        return this.$schema(object, {
+          a: Array.required().fn(arrayCheck),
+          b: Array.required().typeOf(String).fn(arrayCheck)
+        });
+
+        function arrayCheck(array, keyPath) {
+          should(keyPath).match(/^o\.(a|b)$/);
+          if (~array.indexOf('Skerla')) {
+            this.errors.push('Well, array at path `' + keyPath + '` cannot contain string "Skerla".');
+          }
+        }
+      })
+    });
   });
 
   it('Object', function () {

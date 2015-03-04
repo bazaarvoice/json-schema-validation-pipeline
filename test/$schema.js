@@ -2,6 +2,7 @@
  * Created by Andrius Skerla on 12/11/14.
  * mailto: andrius@skerla.com
  */
+var _ = require('lodash');
 var chai = require('chai');
 var should = require('should');
 var Validator = require('./../');
@@ -20,7 +21,6 @@ function validate(object, pipeline) {
 describe('$schema', function () {
 
   it('should run $schema by default if no pipeline method if defined', function () {
-
     Validator([
       {$schema: {
         name: String.required()
@@ -32,6 +32,58 @@ describe('$schema', function () {
     }, [{
       name: String.required()
     }]).should.be.length(0);
+  });
+
+  it ('Number.cardinalityAgnostic', function () {
+    var testObjs = [{id: [4], name: 'hey'}, {id: 4, name: 'hey'}];
+    _.forEach(testObjs, function(o) {
+      validate(o, [
+          {$schema: {
+            id: Number.cardinalityAgnostic()
+          }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          id: Number.required().min(4).max(4).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          id: Number.required().min(5).cardinalityAgnostic(),
+          name: Number
+        }}
+      ]).should.be.length(2);
+
+      validate({id: 'asd'}, [
+        {$schema: {
+          id: Number.cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate({}, [
+        {$schema: {
+          id: Number.required().cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate({
+        type: 'Big'
+      }, [
+        {$schema: {
+          type: String.oneOf(['Big', 'Small', 'Medium'])
+        }}
+      ]).should.be.length(0);
+
+      validate({
+        type: 'Tiny'
+      }, [
+        {$schema: {
+          type: String.oneOf(['Big', 'Small', 'Medium'])
+        }}
+      ]).should.be.length(1);
+    });
   });
 
   it('Number', function () {
@@ -90,9 +142,62 @@ describe('$schema', function () {
 
   });
 
+  it('String.cardinalityAgnostic', function () {
+    testObjs = [{id: 5, name: ['hello world']}, {id: 5, name: 'hello world'}]
+
+    _.forEach(testObjs, function (o) {
+      validate(o, [
+        {$schema: {
+          name: String.cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.min(20).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.max(1).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.regexp(/hello/).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.regexp(/hello^/).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+
+      validate(o, [
+        {$schema: {
+          name: String.len(11).cardinalityAgnostic()
+        }}
+      ]).should.be.length(0);
+
+      validate(o, [
+        {$schema: {
+          name: String.len(1).cardinalityAgnostic()
+        }}
+      ]).should.be.length(1);
+    });
+  });
+
   it('String', function () {
     var o = {id: 5, name: 'hello world'};
-
     validate(o, [
       {$schema: {
         name: String
@@ -272,7 +377,55 @@ describe('$schema', function () {
         })
       }}
     ]).should.be.length(1);
+  });
 
+  it('Object.cardinalityAgnostic', function () {
+    validate({
+      o: {}
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(0);
+
+    validate({
+      o: [{}]
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(0);
+
+    validate({
+      o: [4]
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(1);
+
+    validate({
+      o: 4
+    }, {
+      o: Object.cardinalityAgnostic()
+    }).should.be.length(1);
+
+    var errors = validate({
+      o: [{
+        a: [],
+        b: ['Skerla']
+      }]
+    }, {
+      o: Object.cardinalityAgnostic().required().fn(function (object, keyPath) {
+        should(keyPath).match(/^o$/);
+
+        return this.$schema(object, {
+          a: Array.required().fn(arrayCheck),
+          b: Array.required().typeOf(String).fn(arrayCheck)
+        });
+
+        function arrayCheck(array, keyPath) {
+          should(keyPath).match(/^o\.(a|b)$/);
+          if (~array.indexOf('Skerla')) {
+            this.errors.push('Well, array at path `' + keyPath + '` cannot contain string "Skerla".');
+          }
+        }
+      })
+    });
   });
 
   it('Object', function () {

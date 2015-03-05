@@ -1,13 +1,11 @@
-# Advanced JSON Schema Validator
+# Advanced JSON Schema Validator Customized For Curations With Love
 
 Makes your life easier!
 
-## Confession
-This package modifies global `String`, `Object`, `Array`, `Function`, `Number` and `Boolean` constructor properties. I feel bad about it. Really.
-
 ## Installation
-```bash
-$ npm install json-schema-validation-pipeline
+In your package.json make sure to inlcude:
+```
+"json-schema-validation-pipeline": "feedmagnet/json-schema-validation-pipeline"
 ```
 
 ## Usage
@@ -34,7 +32,7 @@ var objectToValidate = {
   surname: 'Skerla',
   age: 26,
   email: 'andrius@skerla.com',
-  role: 'Developer',
+  roles: ['Developer', 'Tester'],
   address: {
     country: 'UK',
     //city: 'London',
@@ -52,7 +50,7 @@ var validate = ValidationPipeline([
     'surname': String.required(),
     'age': Number,
     'birthday': String,
-    'role': String.oneOf(['Developer', 'Musician']),
+    'role': String.oneOf(['Developer', 'Musician']).cardinalityAgnostic(),
     'email': Function.required().fn(function (value) {
       return value === 'andrius@skerla.com'? undefined : 'This email is not mine';
     }),
@@ -200,6 +198,7 @@ Applicable methods:
 * regexp
 * oneOf
 * fn
+* cardinalityAgnostic
  
 #### `Number`
 Applicable methods:
@@ -209,6 +208,7 @@ Applicable methods:
 * max
 * oneOf
 * fn
+* cardinalityAgnostic
 
 #### `Boolean`
 Applicable methods:
@@ -227,6 +227,7 @@ Applicable methods:
 
 * required
 * fn
+* cardinalityAgnostic
  
 #### `Array`
 Applicable methods:
@@ -324,6 +325,9 @@ var result = ValidationPipeline([
 
 // result.errors == [ '`value.3` must be a number' ]
 ```
+
+#### `cardinalityAgnostic()`
+Allows either an object or an array of objects. All the objects in the array must satisfy the specified schema contraints.
 
 
 ## Running tests

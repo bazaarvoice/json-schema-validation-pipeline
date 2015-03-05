@@ -50,7 +50,7 @@ var validate = ValidationPipeline([
     'surname': String.required(),
     'age': Number,
     'birthday': String,
-    'role': String.oneOf(['Developer', 'Musician']).cardinalityAgnostic(),
+    'roles': String.oneOf(['Developer', 'Tester']).cardinalityAgnostic(),
     'email': Function.required().fn(function (value) {
       return value === 'andrius@skerla.com'? undefined : 'This email is not mine';
     }),

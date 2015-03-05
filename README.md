@@ -328,7 +328,28 @@ var result = ValidationPipeline([
 
 #### `cardinalityAgnostic()`
 Allows either an object or an array of objects. All the objects in the array must satisfy the specified schema contraints.
+In the exmple below the key `values` can be either a number or an array of numbers.
+```js
+var objectToValidate = {
+  values: [1, 2, 3],
+};
+var result = ValidationPipeline([
+  {$schema: {
+    values: Number.min(0).cardinalityAgnostic()
+  }}
+])(objectToValidate);
+// result.errors == []
 
+objectToValidate = {
+  values: 1,
+};
+var result = ValidationPipeline([
+  {$schema: {
+    values: Number.min(0).cardinalityAgnostic()
+  }}
+])(objectToValidate);
+// result.errors == []
+```
 
 ## Running tests
 ```bash
